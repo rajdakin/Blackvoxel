@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <cstdint>
 
 //ZBasicMemoryPool ZStringBasicMemoryPool;
 
@@ -1280,9 +1281,9 @@ void ZString::SetToDataFilesPath()
       file = fopen(temp.String,"rb"); if (!file) { printf("Error loading version file\n"); AddToPath("."); return;}
       if (file)
       {
-        int versionNum;
+        uint32_t versionNum;
 
-        if (versionNum!=fread(Pool,4,versionNum,file)) { printf("Error loading version file\n"); AddToPath("."); return; }
+        if (fread(&versionNum, sizeof(uint32_t), 1, file) != ) { printf("Error loading version file\n"); AddToPath("."); return; }
         if (versionNum != COMPILEOPTION_VERSIONNUM) { AddToPath("."); return; }
         fclose(file);
       }

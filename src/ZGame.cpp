@@ -67,6 +67,14 @@
 #  include "ZLoadingScreen.h"
 #endif
 
+#ifndef Z_ZGAMEWINDOW_ZPROGROBOT_REMOTE_H
+#  include "ZGameWindow_ZProgRobot_Remote.h"
+#endif
+
+#ifndef Z_ZGAMEWINDOW_RESUMEREQUEST_LITTLE_H
+#  include "ZGameWindow_ResumeRequest_Little.h"
+#endif
+
 bool ZGame::Init_UserDataStorage(ZLog * InitLog)
 {
   ZString ErrorMsg;
@@ -82,9 +90,9 @@ bool ZGame::Init_UserDataStorage(ZLog * InitLog)
   if (COMPILEOPTION_USEHOMEDIRSTORAGE)
   {
     Path_UserData = ZStream_File::Get_Directory_UserData();
-    Path_UserData.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
-    if ( !ZStream_File::Directory_CreateIfNotExists(Path_UserData.String)) { ErrorMsg << "ERROR *** : Can't create application user directory [" << Path_UserData << "]."; InitLog->Log(3, ZLog::FAIL, ErrorMsg); puts(ErrorMsg.String); return(false); }
   }
+  Path_UserData.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
+  if ( !ZStream_File::Directory_CreateIfNotExists(Path_UserData.String)) { ErrorMsg << "ERROR *** : Can't create application user directory [" << Path_UserData << "]."; InitLog->Log(3, ZLog::FAIL, ErrorMsg); puts(ErrorMsg.String); return(false); }
 
   // Directory for game files
 
@@ -669,19 +677,41 @@ bool ZGame::Init_Sound(ZLog * InitLog)
 {
   ZString Msg;
   InitLog->Log(1, ZLog::INFO, "Starting : Sound Init");
+
+  // New Sound Object
+
   if (!(Sound = new ZSound)) return(false);
+
+  // Load the sound sample files.
 
   Sound->LoadSoundFiles();
   Msg.Clear() << "Loaded " << Sound->GetSampleCount() << " Sound samples."; InitLog->Log(3, ZLog::INFO, Msg);
   if (Sound->GetSampleCount() < 8) { ZString Err; Err << "Missing Sound Sample Files (count : " << Sound->GetSampleCount()<< ")"; InitLog->Log(4, ZLog::FAIL, Err); return(false); }
 
+  // Get the volume from settings.
+
   double Vol = Settings_Hardware->Setting_SoundVolume/100.0;
 
+  // Adjust sample volume. This is precomputed to reduce overhead.
+
+  for (ULong i=0; i < Sound->GetSampleCount() ; i++)
+  {
+    switch (i)
+    {
+      case 2:    Sound->SampleModify_Volume(2,0.5 * Vol);  break;
+      case 3:    Sound->SampleModify_Volume(3,0.5 * Vol);  break;
+      case 4:    Sound->SampleModify_Volume(4,0.5 * Vol);  break;
+      case 5:    Sound->SampleModify_Volume(5,0.03* Vol);  break; // Vrilleuse d'oreilles (0.1)
+      case 6:    Sound->SampleModify_Volume(6,0.3 * Vol);  break; // Bloc Break (0.3)
+      case 7:    Sound->SampleModify_Volume(7,0.3 * Vol);  break; // Bloc Place (0.3)
+      default:   if (Vol<1.0) Sound->SampleModify_Volume(1,1.0 * Vol);  break;
+    }
+  }
+
+  // Activate sound depending on settings.
+
   Sound->Activate(Settings_Hardware->Setting_SoundEnabled);
-  Sound->SampleModify_Volume(4,0.5 * Vol);
-  Sound->SampleModify_Volume(5,0.03* Vol ); // Vrilleuse d'oreilles (0.1)
-  Sound->SampleModify_Volume(6,0.3 * Vol); // Bloc Break (0.3)
-  Sound->SampleModify_Volume(7,0.3 * Vol); // Bloc Place (0.3)
+
 
   Initialized_Sound = true;
   InitLog->Log(2, ZLog::INFO, "Ended Ok : Sound Init");
@@ -826,8 +856,8 @@ bool ZGame::Start_PhysicEngine()
   if (COMPILEOPTION_USEHOMEDIRSTORAGE)
   {
     FileName = ZStream_File::Get_Directory_UserData();
-    FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   }
+  FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   UNum = UniverseNum;
   FileName.AddToPath("Universes").AddToPath(UNum).AddToPath("PlayerInfo.dat");
   FileStream.SetFileName(FileName.String);
@@ -836,10 +866,11 @@ bool ZGame::Start_PhysicEngine()
     Stream.SetStream(&FileStream);
     Stream.OpenRead();
 
-    ActorPlayer->Load(&Stream);
+    if (ActorPlayer->Load(&Stream)) printf("Player Loaded Ok\n");
+    else                            printf("Player Loading error\n");
     Stream.Close();
     FileStream.Close();
-  }
+  } printf("Player created\n");
 
 
   // Inventory Loading
@@ -864,8 +895,8 @@ bool ZGame::End_PhysicEngine()
   if (COMPILEOPTION_USEHOMEDIRSTORAGE)
   {
     FileName = ZStream_File::Get_Directory_UserData();
-    FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   }
+  FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   UNum = UniverseNum;
 #if COMPILEOPTION_ALLOWSAVEPLAYERSTATE == 1
   FileName.AddToPath("Universes").AddToPath(UNum).AddToPath("PlayerInfo.dat");
@@ -985,6 +1016,7 @@ bool ZGame::Start_GameWindows()
   GameWindow_Storage     = new ZGameWindow_Storage;       GameWindow_Storage->SetGameEnv(this);
   GameWindow_Programmable= new ZGameWindow_Programmable;  GameWindow_Programmable->SetGameEnv(this);
   GameWindow_ProgRobot_Asm=new ZGameWindow_ProgRobot_Asm; GameWindow_ProgRobot_Asm->SetGameEnv(this);
+  GameWindow_ProgRobot_Remote=new ZGameWindow_ProgRobot_Remote; GameWindow_ProgRobot_Remote->SetGameEnv(this);
   GameProgressBar        = new ZGameWindow_ProgressBar;   GameProgressBar->SetGameEnv(this);
   GameWindow_Advertising = new ZGameWindow_Advertising;   GameWindow_Advertising->SetGameEnv(this);
   GameWindow_UserTextureTransformer = new ZGameWindow_UserTextureTransformer; GameWindow_UserTextureTransformer->SetGameEnv(this);
@@ -994,7 +1026,8 @@ bool ZGame::Start_GameWindows()
   GameWindow_AsmHardware = new ZGameWindow_AsmHardware;   GameWindow_AsmHardware->SetGameEnv(this);
   GameWindow_AsmExtendedRegisters = new ZGameWindow_AsmExtendedRegisters; GameWindow_AsmExtendedRegisters->SetGameEnv(this);
   GameWindow_Compilation_Result = new ZGameWindow_Compilation_Result;     GameWindow_Compilation_Result->SetGameEnv(this);
-  GameWindow_ResumeRequest = new ZGameWindow_ResumeRequest; GameWindow_ResumeRequest->SetGameEnv(this);
+  GameWindow_ResumeRequest = new ZGameWindow_ResumeRequest;               GameWindow_ResumeRequest->SetGameEnv(this);
+  GameWindow_ResumeRequest_Little = new ZGameWindow_ResumeRequest_Little; GameWindow_ResumeRequest_Little->SetGameEnv(this);
   GameWindow_SPS           = new ZGameWindow_SPS;         GameWindow_SPS->SetGameEnv(this);
   GameWindow_Scan          = new ZGameWindow_Scan;        GameWindow_Scan->SetGameEnv(this);
   GameWindow_RTFM          = new ZGameWindow_RTFM;        GameWindow_RTFM->SetGameEnv(this);
@@ -1008,17 +1041,15 @@ bool ZGame::End_GameWindows()
 {
   GuiManager.RemoveAllFrames();
 
-  if (VoxelTypeBar) delete VoxelTypeBar;
-  VoxelTypeBar = 0;
-  if (GameWindow_Storage) delete GameWindow_Storage;
-  GameWindow_Storage = 0;
-  if (GameWindow_UserTextureTransformer) delete GameWindow_UserTextureTransformer;
-  GameWindow_UserTextureTransformer = 0;
-  if (GameWindow_Inventory) delete GameWindow_Inventory;
-  GameWindow_Inventory = 0;
-  if (GameProgressBar)      delete GameProgressBar;
+  if (VoxelTypeBar)       {delete VoxelTypeBar; VoxelTypeBar = 0; }
+  if (GameWindow_Storage) {delete GameWindow_Storage; GameWindow_Storage = 0; }
+  if (GameWindow_UserTextureTransformer) { delete GameWindow_UserTextureTransformer; GameWindow_UserTextureTransformer = 0; }
+  if (GameWindow_Inventory) { delete GameWindow_Inventory; GameWindow_Inventory = 0; }
+  if (GameWindow_ResumeRequest_Little) {delete GameWindow_ResumeRequest_Little; GameWindow_ResumeRequest_Little = 0;}
+  if (GameProgressBar)      {delete GameProgressBar; GameProgressBar=0;}
   if (GameWindow_SPS)       {delete GameWindow_SPS; GameWindow_SPS = 0;}
   if (GameWindow_Scan)      {delete GameWindow_Scan; GameWindow_Scan = 0;}
+  if (GameWindow_ProgRobot_Remote) {delete GameWindow_ProgRobot_Remote; GameWindow_ProgRobot_Remote = 0;}
 
   Initialized_GameWindows = false;
   return(true);

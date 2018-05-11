@@ -97,6 +97,7 @@ ZVoxelType::ZVoxelType(UShort VoxelType)
   BvProp_AtomicFireResistant = false;
   BvProp_EgmyT1Resistant = false;
   BvProp_AccelerateOnFall = false;
+  BvProp_UseInventoryImage=false;
   LiquidDensity = 0.0;
   BlastResistance = 1;
   OpenGl_TextureRef = 0;
@@ -128,7 +129,8 @@ Bool ZVoxelType::LoadTexture()
   else
   {
     FileName << "voxeltexture_" << (ULong)(VoxelType - 32767) << ".bmp";
-    if (COMPILEOPTION_USEHOMEDIRSTORAGE) { FileSpec = ZStream_File::Get_Directory_UserData(); FileSpec.AddToPath(COMPILEOPTION_SAVEFOLDERNAME); }
+    if (COMPILEOPTION_USEHOMEDIRSTORAGE) { FileSpec = ZStream_File::Get_Directory_UserData();  }
+    FileSpec.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
     FileSpec.AddToPath("UserTextures");
     FileSpec.AddToPath(FileName);
   }
@@ -173,7 +175,8 @@ Bool ZVoxelType::LoadVoxelInformations()
   else
   {
     FileName << "voxelinfo_" << (ULong)(VoxelType - 32767) << ".txt";
-    if (COMPILEOPTION_USEHOMEDIRSTORAGE) { FileSpec = ZStream_File::Get_Directory_UserData(); FileSpec.AddToPath(COMPILEOPTION_SAVEFOLDERNAME); }
+    if (COMPILEOPTION_USEHOMEDIRSTORAGE) { FileSpec = ZStream_File::Get_Directory_UserData();  }
+    FileSpec.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
     FileSpec.AddToPath("UserTextures").AddToPath("voxelinfo").AddToPath(FileName);
   }
 
@@ -235,6 +238,7 @@ Bool ZVoxelType::LoadVoxelInformations()
       if (Token == "BvProp_AtomicFireResistant")  { BvProp_AtomicFireResistant = (Line.GetULong()!=0) ? true:false; }
       if (Token == "BvProp_EgmyT1Resistant")      { BvProp_EgmyT1Resistant = (Line.GetULong()!=0) ? true:false; }
       if (Token == "BvProp_AccelerateOnFall")     { BvProp_AccelerateOnFall = (Line.GetULong()!=0) ? true:false; }
+      if (Token == "BvProp_UseInventoryImage")    { BvProp_UseInventoryImage = (Line.GetULong()!=0) ? true:false; }
       if (Token == "Draw_LinearInterpolation")    { Draw_LinearInterpolation = (Line.GetULong()!=0) ? true:false; }
 
 

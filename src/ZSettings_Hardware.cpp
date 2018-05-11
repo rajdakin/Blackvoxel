@@ -80,7 +80,8 @@ ZSettings_Hardware::ZSettings_Hardware()
     Setting_Favorite_Editor = "leafpad";
   }
 
-
+  RemoteExtension_Enable = false;
+  RemoteExtension_Port   = 0;
 }
 
 
@@ -91,8 +92,8 @@ bool ZSettings_Hardware::Load()
   if (COMPILEOPTION_USEHOMEDIRSTORAGE)
   {
     FileName = ZStream_File::Get_Directory_UserData();
-    FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   }
+  FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   FileName.AddToPath("Settings_Hardware.dat");
 
   if (File.LoadFromFile(FileName.String))
@@ -179,6 +180,9 @@ bool ZSettings_Hardware::Load()
         }
         if (Token=="Experimental_LearningMode") { Experimental_LearningMode = (Line.GetULong() > 0) ? true : false; }
 
+        if (Token=="WebExtension_Enable") { RemoteExtension_Enable = (Line.GetULong() > 0) ? true : false; }
+        if (Token=="WebExtension_Port")   { RemoteExtension_Port   = (UShort)Line.GetULong(); }
+
         if (Token=="Setting_Favorite_Editor")
         {
           Line.StripLeading(' ');
@@ -206,8 +210,8 @@ bool ZSettings_Hardware::Save()
   if (COMPILEOPTION_USEHOMEDIRSTORAGE)
   {
     FileName = ZStream_File::Get_Directory_UserData();
-    FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   }
+  FileName.AddToPath(COMPILEOPTION_SAVEFOLDERNAME);
   FileName.AddToPath("Settings_Hardware.dat");
 
   Out << "Setting_Resolution_h          = " << Setting_Resolution_h                   << Out.NewLine();
@@ -236,6 +240,8 @@ bool ZSettings_Hardware::Save()
   Out << "Opt_SectCFactor               = " << Opt_SectCFactor << Out.NewLine();
   Out << "PixelAspectRatio              = " << PixelAspectRatio << Out.NewLine();
   Out << "Experimental_LearningMode     = " << (Experimental_LearningMode ? 1u:0u)    << Out.NewLine();
+  Out << "WebExtension_Enable           = " << (RemoteExtension_Enable ? 1u:0u)    << Out.NewLine();
+  Out << "WebExtension_Port             = " << RemoteExtension_Port << Out.NewLine();
   Out << "Setting_Favorite_Editor       = " << Setting_Favorite_Editor << Out.NewLine();
   Out << "Setting_Version               = " << (ULong)Setting_Version                 << Out.NewLine();
 

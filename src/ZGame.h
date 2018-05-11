@@ -190,6 +190,8 @@
 
 
 class ZRender_Basic;
+class ZGameWindow_ProgRobot_Remote;
+class ZGameWindow_ResumeRequest_Little;
 
 class ZGame
 {
@@ -242,11 +244,13 @@ class ZGame
              GameWindow_Inventory = 0;
              GameWindow_DisplayInfos = 0;
              GameWindow_ProgRobot_Asm = 0;
+             GameWindow_ProgRobot_Remote = 0;
              GameWindow_AsmDebug = 0;
              GameWindow_AsmHardware = 0;
              GameWindow_AsmExtendedRegisters = 0;
              GameWindow_Compilation_Result = 0;
              GameWindow_ResumeRequest = 0;
+             GameWindow_ResumeRequest_Little = 0;
              GameWindow_SPS = 0;
              GameWindow_Scan = 0;
              GameProgressBar = 0;
@@ -272,6 +276,7 @@ class ZGame
              Stop_Programmable_Robots = false;
              Previous_GameVersion = 0;
              HardwareInfo = 0;
+             Service_RemoteRobotServerStarted = false;
    }
   ~ZGame() { UniverseNum = 0; }
 
@@ -343,6 +348,7 @@ class ZGame
   ZGameWindow_Programmable           * GameWindow_Programmable;
   ZGameWindow_UserTextureTransformer * GameWindow_UserTextureTransformer;
   ZGameWindow_ProgRobot_Asm          * GameWindow_ProgRobot_Asm;
+  ZGameWindow_ProgRobot_Remote          * GameWindow_ProgRobot_Remote;
   ZGameWindow_ProgressBar            * GameProgressBar;
   ZGameWindow_Advertising            * GameWindow_Advertising;
   ZGameWindow_DisplayInfos           * GameWindow_DisplayInfos;
@@ -352,9 +358,11 @@ class ZGame
   ZGameWindow_AsmExtendedRegisters   * GameWindow_AsmExtendedRegisters;
   ZGameWindow_Compilation_Result     * GameWindow_Compilation_Result;
   ZGameWindow_ResumeRequest          * GameWindow_ResumeRequest;
+  ZGameWindow_ResumeRequest_Little   * GameWindow_ResumeRequest_Little;
   ZGameWindow_SPS                    * GameWindow_SPS;
   ZGameWindow_Scan                   * GameWindow_Scan;
   ZGameWindow_RTFM                   * GameWindow_RTFM;
+
 
   bool Initialized_UserDataStorage;
   bool Initialized_Settings;
@@ -383,6 +391,9 @@ class ZGame
   bool Initialized_WorldInfo;
   bool Initialized_GameEventSequencer;
 
+  // Services
+
+  bool Service_RemoteRobotServerStarted;
 
   // Screen Informations
 
